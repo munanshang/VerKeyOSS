@@ -120,7 +120,7 @@
   }
   ```
 
-### 3. 为软件发布版本（获取 VKey）
+### 3. 发布版本（获取 VKey）
 - **URL**：`/api/software/{akey}/versions`  // 替换{akey}为实际软件标识
 - **方法**：`POST`
 - **请求头**：`Authorization: Bearer {admin_token}`
