@@ -50,8 +50,8 @@
      db:
        host: "localhost"
        port: 3306
-       user: "root"
-       password: "你的密码"
+       user: "verkeyoss"
+       password: "verkeyoss"
        name: "verkeyoss"
      server:
        port: 8080  # API 服务端口
