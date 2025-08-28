@@ -193,7 +193,7 @@
 
 ## 完整 API 文档
 
-查看完整接口说明：[API 文档](docs/api.md)docs/api.md)
+查看完整接口说明：[API 文档](docs/api.md)
 
 ## 项目结构
 verkeyoss/
