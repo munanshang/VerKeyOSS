@@ -201,7 +201,6 @@ verkeyoss/
 ├── cmd/
 │   ├── server/        # 服务相关逻辑
 │   └── migrate/       # 数据库迁移工具
-│       └── main.go    # 迁移工具独立入口
 ├── internal/
 │   ├── api/           # API 处理器（路由和请求处理）
 │   ├── model/         # 数据模型（结构体定义）
@@ -228,5 +227,5 @@ verkeyoss/
 
 ## 联系方式
 
-- 项目地址：https://github.com/你的用户名/verkeyoss
+- 项目地址：https://github.com/munanshang/verkeyoss
 - 问题反馈：提交 Issue 至本仓库    
