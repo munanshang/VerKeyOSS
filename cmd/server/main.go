@@ -72,7 +72,6 @@ func main() {
 
 	go func() {
 		log.Printf("服务器启动在 http://localhost:%d\n", port)
-		log.Printf("前端测试页面: http://localhost:%d\n", port)
 		log.Printf("API接口地址: http://localhost:%d/api\n", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("服务器启动失败: %v", err)
@@ -136,9 +135,6 @@ func setupRouter(services *service.Services) *gin.Engine {
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
-	// 提供静态文件服务
-	r.StaticFile("/", "./templates/index_test.html")
-	r.Static("/static", "./templates/public")
 
 	// API路由组
 	apiGroup := r.Group("/api")

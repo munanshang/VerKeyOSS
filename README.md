@@ -210,11 +210,6 @@ verkeyoss/
 │   ├── model/         # 数据模型（结构体定义）
 │   ├── service/       # 业务逻辑层
 │   └── store/         # 数据库操作层（与数据库交互）
-├── templates/         # 前端模板及静态资源
-│   ├── public/        # 静态文件（CSS、JS、图片等）
-│   ├── admin/         # 管理员界面模板
-│   │   └── index.html # 管理员首页
-│   └── index.html     # 前端入口页面
 ├── docs/
 │   └── api.md         # 完整API文档
 ├── config.example.yaml # 配置模板（需复制为config.yaml使用）
