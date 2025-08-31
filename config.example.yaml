@@ -1,0 +1,19 @@
+# VerKeyOSS 配置文件示例
+# 复制此文件并重命名为 config.yaml 后使用
+
+# 数据库配置
+db:
+  host: "localhost"      # 数据库主机地址
+  port: 3306             # 数据库端口
+  user: "verkeyoss"           # 数据库用户名
+  password: "verkeyoss"  # 数据库密码
+  name: "verkeyoss"      # 数据库名称
+
+# 服务器配置
+server:
+  port: 8080             # API 服务端口
+
+# JWT 配置
+jwt:
+  secret: "your_jwt_secret_key"  # JWT 密钥，生产环境中请使用强密钥
+  expire_hours: 24        # token 过期时间（小时）

@@ -1,0 +1,63 @@
+# Go项目忽略规则
+
+# 二进制文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 中间文件
+*.o
+*.a
+*.i
+
+# 编译目录
+bin/
+build/
+
+# Go 测试缓存
+*.test
+
+# 测试文件
+*_test.*
+
+# Go 模块缓存
+go.work
+go.work.sum
+
+# 环境变量文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# 编辑器目录和文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS 生成的文件
+.DS_Store
+Thumbs.db
+
+# 配置文件（保留示例文件，忽略实际配置）
+config.yaml
+!config.example.yaml
+
+# 其他不需要版本控制的文件
+*.bak
+*.old
+*.orig
