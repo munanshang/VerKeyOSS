@@ -196,6 +196,7 @@
 查看完整接口说明：[API 文档](docs/api.md)
 
 ## 项目结构
+```
 verkeyoss/
 ├── main.go            # 项目总入口（程序启动主文件）
 ├── cmd/
@@ -216,6 +217,7 @@ verkeyoss/
 ├── config.example.yaml # 配置模板（需复制为config.yaml使用）
 ├── LICENSE            # AGPLv3 协议文本
 └── README.md          # 项目说明文档
+```
 
 ## 贡献指南
 
