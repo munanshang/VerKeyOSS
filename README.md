@@ -1,4 +1,8 @@
-# VerKeyOSS
+<div align="center">
+  <img src="docs/images/Logo.svg" alt="Logo" width="180" height="180">
+</div>
+
+<h3 align="center">VerKeyOSS</h3>
 
 一款开源的软件版本管理系统，用于管理软件标识（AKey）和版本标识（VKey），支持合法性校验和新版本检测，适用于各类软件的版本管控场景。
 
