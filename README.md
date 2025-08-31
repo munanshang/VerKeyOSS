@@ -35,7 +35,7 @@
 
 1. 克隆代码库
    ```bash
-   git clone https://github.com/你的用户名/verkeyoss.git
+   git clone https://github.com/munanshang/verkeyoss.git
    cd verkeyoss
    ```
 
