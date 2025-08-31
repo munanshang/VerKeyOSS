@@ -19,8 +19,8 @@ build/
 # Go 测试缓存
 *.test
 
-# 测试文件
-# *_test.*
+# PowerShell 脚本
+*.ps1
 
 # Go 模块缓存
 go.work
