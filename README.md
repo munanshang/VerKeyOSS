@@ -37,6 +37,62 @@
 
 ### 部署步骤
 
+项目提供两种部署方式，您可以根据需要选择适合的方式。
+
+#### 方式一：使用编译好的版本（推荐）
+
+1. 访问 GitHub Releases 页面下载最新版本
+   ```
+   https://github.com/munanshang/verkeyoss/releases
+   ```
+   - 该页面提供了 Windows 和 Linux 版本的可执行文件
+   - 同时也提供了 `config.example.yaml` 配置文件的下载
+
+2. 准备配置文件
+   - 从 GitHub Releases 页面下载 `config.example.yaml` 文件
+   - 复制并重命名配置文件
+     - Windows 用户可以直接在文件资源管理器中复制文件并将其重命名为 `config.yaml`
+     - 或者使用命令行（根据系统环境选择）
+       ```bash
+       # Windows 命令提示符
+       copy config.example.yaml config.yaml
+       
+       # Windows PowerShell 或 Linux/macOS
+       cp config.example.yaml config.yaml
+       ```
+   - 修改配置文件中的数据库信息
+     ```yaml
+     db:
+       host: "localhost"
+       port: 3306
+       user: "verkeyoss"
+       password: "verkeyoss"
+       name: "verkeyoss"
+     server:
+       port: 8080  # API 服务端口
+     ```
+
+3. 初始化数据库
+   - 目前数据库迁移需要从源码编译执行
+     ```bash
+     git clone https://github.com/munanshang/verkeyoss.git
+     cd verkeyoss
+     go run cmd/migrate/main.go  # 执行数据库迁移，创建表结构
+     ```
+
+4. 启动服务
+   - Windows 系统：直接双击下载的 `.exe` 文件即可启动服务
+   - 或者也可以通过命令行启动（根据下载的实际版本号调整）
+     ```bash
+     # Windows 命令行
+     .\VerKeyOSS_0.0.1-beta_win_amd64.exe
+     
+     # Linux 系统（根据下载的实际版本号调整）
+     ./VerKeyOSS_0.0.1-beta_linux_amd64
+     ```
+
+#### 方式二：从源码编译部署
+
 1. 克隆代码库
    ```bash
    git clone https://github.com/munanshang/verkeyoss.git
@@ -228,4 +284,4 @@ verkeyoss/
 ## 联系方式
 
 - 项目地址：https://github.com/munanshang/verkeyoss
-- 问题反馈：提交 Issue 至本仓库    
+- 问题反馈：提交 Issue 至本仓库
