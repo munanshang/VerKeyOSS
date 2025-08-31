@@ -20,7 +20,7 @@ build/
 *.test
 
 # 测试文件
-*_test.*
+# *_test.*
 
 # Go 模块缓存
 go.work
