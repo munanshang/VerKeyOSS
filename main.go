@@ -19,6 +19,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// //go:embed web
+// var vueDist embed.FS
+
 // 配置结构体
 type Config struct {
 	DB struct {
@@ -72,7 +75,6 @@ func main() {
 
 	go func() {
 		log.Printf("服务器启动在 http://localhost:%d\n", port)
-		log.Printf("API接口地址: http://localhost:%d/api\n", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("服务器启动失败: %v", err)
 		}
@@ -129,12 +131,67 @@ func setupRouter(services *service.Services) *gin.Engine {
 	r := gin.Default()
 	// 允许跨域
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
+	// distFS, err := fs.Sub(vueDist, "web")
+	// if err != nil {
+	// 	log.Fatalf("无法创建子文件系统: %v", err)
+	// }
+
+	// 将静态文件服务挂载到根路径，确保Vue应用资源能正确加载
+	// 注意：静态文件服务应该在API路由之后注册
+	// 但由于前端资源引用路径的问题，我们需要先处理一些特殊路径
+
+	// // 处理favicon.ico
+	// r.GET("/favicon.ico", func(c *gin.Context) {
+	// 	favicon, readErr := fs.ReadFile(distFS, "favicon.ico")
+	// 	if readErr != nil {
+	// 		c.Status(http.StatusNotFound)
+	// 		return
+	// 	}
+	// 	c.Data(http.StatusOK, "image/x-icon", favicon)
+	// })
+
+	// // 处理assets目录
+	// assetsFS, err := fs.Sub(distFS, "assets")
+	// if err == nil {
+	// 	r.StaticFS("/assets", http.FS(assetsFS))
+	// }
+
+	// // 前端入口页面 - 根路径返回index.html
+	// r.GET("/", func(c *gin.Context) {
+	// 	indexHTML, err := fs.ReadFile(distFS, "index.html")
+	// 	if err != nil {
+	// 		c.String(http.StatusInternalServerError, "无法读取前端页面: %v", err)
+	// 		return
+	// 	}
+	// 	c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
+	// })
+
+	// // 所有未匹配的路由返回index.html，以支持前端SPA路由（history模式）
+	// r.NoRoute(func(c *gin.Context) {
+	// 	// 不处理API路径，避免影响API响应
+	// 	if strings.HasPrefix(c.Request.RequestURI, "/api/") {
+	// 		c.Status(http.StatusNotFound)
+	// 		return
+	// 	}
+	// 	indexHTML, err := fs.ReadFile(distFS, "index.html")
+	// 	if err != nil {
+	// 		c.String(http.StatusInternalServerError, "无法读取前端页面: %v", err)
+	// 		return
+	// 	}
+	// 	c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
+	// })
+
+	r.LoadHTMLFiles("web/dist/index.html")
+	r.Static("/assets", "./web/dist/assets")
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
 
 	// API路由组
 	apiGroup := r.Group("/api")
@@ -155,7 +212,6 @@ func setupRouter(services *service.Services) *gin.Engine {
 		softwareGroup.Use(api.AuthMiddleware(services.AdminService))
 		softwareGroup.POST("", softwareHandler.CreateSoftware)
 		softwareGroup.GET("", softwareHandler.GetSoftwareList)
-		softwareGroup.GET("/:akey", softwareHandler.GetSoftwareInfo)
 		softwareGroup.PUT("/:akey", softwareHandler.UpdateSoftware)
 		softwareGroup.DELETE("/:akey", softwareHandler.DeleteSoftware)
 
@@ -173,7 +229,6 @@ func setupRouter(services *service.Services) *gin.Engine {
 	versionDetailHandler := api.NewVersionHandler(services.VersionService)
 	{
 		versionDetailGroup.Use(api.AuthMiddleware(services.AdminService))
-		versionDetailGroup.GET("/:vkey", versionDetailHandler.GetVersionInfo)
 		versionDetailGroup.PUT("/:vkey", versionDetailHandler.UpdateVersion)
 		versionDetailGroup.DELETE("/:vkey", versionDetailHandler.DeleteVersion)
 	}

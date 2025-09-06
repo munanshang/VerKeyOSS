@@ -70,12 +70,13 @@ func (h *VersionHandler) GetVersionList(c *gin.Context) {
 		return
 	}
 
-	// 格式化返回数据
+	// 格式化返回数据，不包含akey字段，但包含版本描述
 	var resultList []map[string]interface{}
 	for _, version := range versions {
 		resultList = append(resultList, map[string]interface{}{
 			"vkey":        version.VKey,
 			"version":     version.Version,
+			"description": version.Description,
 			"is_latest":   version.IsLatest,
 			"created_at":  version.CreatedAt.Format("2006-01-02T15:04:05Z"),
 		})
@@ -88,28 +89,7 @@ func (h *VersionHandler) GetVersionList(c *gin.Context) {
 	}))
 }
 
-// GetVersionInfo 获取版本信息接口
-func (h *VersionHandler) GetVersionInfo(c *gin.Context) {
-	// 获取VKey
-	vkey := c.Param("vkey")
 
-	// 调用服务层获取版本信息
-	version, err := h.service.GetVersionInfo(vkey)
-	if err != nil {
-		c.JSON(http.StatusNotFound, ErrorResponse(404, "VKey不存在"))
-		return
-	}
-
-	// 返回成功响应
-	c.JSON(http.StatusOK, SuccessResponse(map[string]interface{}{
-		"vkey":        version.VKey,
-		"akey":        version.AKey,
-		"version":     version.Version,
-		"description": version.Description,
-		"is_latest":   version.IsLatest,
-		"created_at":  version.CreatedAt.Format("2006-01-02T15:04:05Z"),
-	}))
-}
 
 // UpdateVersion 更新版本信息接口
 func (h *VersionHandler) UpdateVersion(c *gin.Context) {
@@ -118,6 +98,7 @@ func (h *VersionHandler) UpdateVersion(c *gin.Context) {
 
 	// 绑定请求体
 	var updateRequest struct {
+		Version     string `json:"version"`
 		Description string `json:"description"`
 		IsLatest    bool   `json:"is_latest"`
 	}
@@ -128,7 +109,7 @@ func (h *VersionHandler) UpdateVersion(c *gin.Context) {
 	}
 
 	// 调用服务层更新版本
-	err := h.service.UpdateVersion(vkey, updateRequest.Description, updateRequest.IsLatest)
+	err := h.service.UpdateVersion(vkey, updateRequest.Version, updateRequest.Description, updateRequest.IsLatest)
 	if err != nil {
 		if err.Error() == "版本不存在" {
 			c.JSON(http.StatusNotFound, ErrorResponse(404, "VKey不存在"))

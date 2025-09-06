@@ -16,6 +16,8 @@
 bin/
 build/
 
+web/
+
 # Go 测试缓存
 *.test
 

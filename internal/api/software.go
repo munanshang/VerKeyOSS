@@ -49,6 +49,7 @@ func (h *SoftwareHandler) CreateSoftware(c *gin.Context) {
 }
 
 // GetSoftwareList 获取软件列表接口
+// 始终包含软件描述字段，不再需要额外参数控制
 func (h *SoftwareHandler) GetSoftwareList(c *gin.Context) {
 	// 获取分页参数
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -61,12 +62,13 @@ func (h *SoftwareHandler) GetSoftwareList(c *gin.Context) {
 		return
 	}
 
-	// 格式化返回数据
+	// 格式化返回数据，始终包含description字段
 	var resultList []map[string]interface{}
 	for _, software := range softwares {
 		resultList = append(resultList, map[string]interface{}{
 			"akey":          software.AKey,
 			"name":          software.Name,
+			"description":   software.Description,
 			"created_at":    software.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			"version_count": software.VersionCount,
 		})
@@ -79,27 +81,7 @@ func (h *SoftwareHandler) GetSoftwareList(c *gin.Context) {
 	}))
 }
 
-// GetSoftwareInfo 获取软件信息接口
-func (h *SoftwareHandler) GetSoftwareInfo(c *gin.Context) {
-	// 获取AKey
-	akey := c.Param("akey")
 
-	// 调用服务层获取软件信息
-	software, err := h.service.GetSoftwareInfo(akey)
-	if err != nil {
-		c.JSON(http.StatusNotFound, ErrorResponse(404, "AKey不存在"))
-		return
-	}
-
-	// 返回成功响应
-	c.JSON(http.StatusOK, SuccessResponse(map[string]interface{}{
-		"akey":          software.AKey,
-		"name":          software.Name,
-		"description":   software.Description,
-		"created_at":    software.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		"version_count": software.VersionCount,
-	}))
-}
 
 // UpdateSoftware 更新软件信息接口
 func (h *SoftwareHandler) UpdateSoftware(c *gin.Context) {

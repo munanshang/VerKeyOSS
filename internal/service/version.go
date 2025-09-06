@@ -63,21 +63,24 @@ func (s *VersionService) GetVersionInfo(vkey string) (*model.Version, error) {
 }
 
 // UpdateVersion 更新版本信息
-func (s *VersionService) UpdateVersion(vkey, description string, isLatest bool) error {
+func (s *VersionService) UpdateVersion(vkey, version, description string, isLatest bool) error {
 	// 获取版本信息
-	version, err := s.store.GetVersionByVKey(vkey)
+	versionInfo, err := s.store.GetVersionByVKey(vkey)
 	if err != nil {
 		return ErrVersionNotFound
 	}
 
 	// 更新字段
+	if version != "" {
+		versionInfo.Version = version
+	}
 	if description != "" {
-		version.Description = description
+		versionInfo.Description = description
 	}
 	// 只有明确设置了isLatest才更新
-	version.IsLatest = isLatest
+	versionInfo.IsLatest = isLatest
 
-	return s.store.UpdateVersion(version)
+	return s.store.UpdateVersion(versionInfo)
 }
 
 // DeleteVersion 删除版本
