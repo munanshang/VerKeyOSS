@@ -7,74 +7,141 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AdminHandler 管理员API处理器
+// AdminHandler 管理员功能处理器
+// 负责处理所有需要管理员权限的操作
 
 type AdminHandler struct {
-	service *service.AdminService
+	userService  *service.UserService
+	appService   *service.AppService
+	versionService *service.VersionService
 }
 
-// NewAdminHandler 创建管理员API处理器
-func NewAdminHandler(service *service.AdminService) *AdminHandler {
-	return &AdminHandler{service: service}
+// NewAdminHandler 创建管理员功能处理器实例
+// 参数 userService 用户服务实例
+// 参数 appService 应用服务实例
+// 参数 versionService 版本服务实例
+func NewAdminHandler(userService *service.UserService, appService *service.AppService, versionService *service.VersionService) *AdminHandler {
+	return &AdminHandler{
+		userService:  userService,
+		appService:   appService,
+		versionService: versionService,
+	}
 }
 
-// Login 管理员登录接口
-func (h *AdminHandler) Login(c *gin.Context) {
-	// 绑定请求体
-	var loginRequest struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
+// GetAllUsers 获取所有用户列表
+// 路由: GET /api/admin/users
+// 需要管理员权限
+func (h *AdminHandler) GetAllUsers(c *gin.Context) {
+	// 获取查询参数
+	page := 1
+	size := 10
+	if c.Query("page") != "" {
+		c.ShouldBindQuery(&page)
+	}
+	if c.Query("size") != "" {
+		c.ShouldBindQuery(&size)
 	}
 
-	if err := c.ShouldBindJSON(&loginRequest); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse(400, "参数错误"))
-		return
-	}
-
-	// 调用服务层处理登录
-	token, expiresAt, err := h.service.Login(loginRequest.Username, loginRequest.Password)
+	// 调用服务层获取所有用户列表
+	users, total, err := h.userService.GetAllUsers(page, size)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, ErrorResponse(401, "用户名或密码错误"))
+		c.JSON(http.StatusInternalServerError, ErrorResponse(500, "获取用户列表失败"))
 		return
 	}
 
 	// 返回成功响应
 	c.JSON(http.StatusOK, SuccessResponse(map[string]interface{}{
-		"token":      token,
-		"expires_at": expiresAt,
+		"total": total,
+		"list":  users,
+		"page":  page,
+		"size":  size,
 	}))
 }
 
-// ChangePassword 修改管理员密码接口
-func (h *AdminHandler) ChangePassword(c *gin.Context) {
-	// 获取用户名
-	username, exists := c.Get("username")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, ErrorResponse(401, "未授权访问"))
-		return
-	}
+// BanUser 封禁用户
+// 路由: PUT /api/admin/users/:id/ban
+// 需要管理员权限
+func (h *AdminHandler) BanUser(c *gin.Context) {
+	// 获取用户ID
+	userId := c.Param("id")
 
 	// 绑定请求体
-	var passwordRequest struct {
-		OldPassword string `json:"old_password" binding:"required"`
-		NewPassword string `json:"new_password" binding:"required"`
+	var banRequest struct {
+		Banned     bool   `json:"banned" binding:"required"`
+		BanReason  string `json:"ban_reason"`
 	}
 
-	if err := c.ShouldBindJSON(&passwordRequest); err != nil {
+	if err := c.ShouldBindJSON(&banRequest); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(400, "参数错误"))
 		return
 	}
 
-	// 调用服务层修改密码
-	err := h.service.ChangePassword(username.(string), passwordRequest.OldPassword, passwordRequest.NewPassword)
+	// 调用服务层封禁/解封用户
+	err := h.userService.BanUser(userId, banRequest.Banned, banRequest.BanReason)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, ErrorResponse(401, err.Error()))
+		c.JSON(http.StatusInternalServerError, ErrorResponse(500, err.Error()))
 		return
 	}
 
 	// 返回成功响应
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "密码修改成功",
-	})
+	c.JSON(http.StatusOK, SuccessResponse("操作成功"))
+}
+
+// GetAllApps 管理员获取所有应用列表
+// 路由: GET /api/admin/apps
+// 需要管理员权限
+func (h *AdminHandler) GetAllApps(c *gin.Context) {
+	// 获取查询参数
+	page := 1
+	size := 10
+	if c.Query("page") != "" {
+		c.ShouldBindQuery(&page)
+	}
+	if c.Query("size") != "" {
+		c.ShouldBindQuery(&size)
+	}
+
+	// 调用服务层获取所有应用列表
+	apps, total, err := h.appService.GetAllApps(page, size)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse(500, "获取应用列表失败"))
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, SuccessResponse(map[string]interface{}{
+		"total": total,
+		"list":  apps,
+		"page":  page,
+		"size":  size,
+	}))
+}
+
+// BanApp 管理员封禁应用
+// 路由: PUT /api/admin/apps/:akey/ban
+// 需要管理员权限
+func (h *AdminHandler) BanApp(c *gin.Context) {
+	// 获取应用AKey
+	akey := c.Param("akey")
+
+	// 绑定请求体
+	var banRequest struct {
+		Banned     bool   `json:"banned" binding:"required"`
+		BanReason  string `json:"ban_reason"`
+	}
+
+	if err := c.ShouldBindJSON(&banRequest); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(400, "参数错误"))
+		return
+	}
+
+	// 调用服务层封禁/解封应用
+	err := h.appService.BanApp(akey, banRequest.Banned, banRequest.BanReason)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse(500, err.Error()))
+		return
+	}
+
+	// 返回成功响应
+	c.JSON(http.StatusOK, SuccessResponse("操作成功"))
 }

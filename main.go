@@ -7,13 +7,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"verkeyoss/internal/api"
+	"verkeyoss/internal/initializer"
+	"verkeyoss/internal/router"
 	"verkeyoss/internal/service"
 
 	"verkeyoss/internal/store"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -53,6 +52,9 @@ func main() {
 		log.Fatalf("数据库连接失败: %v", err)
 	}
 
+	// 执行数据库初始化
+	initializer.Initialize(db)
+
 	// 初始化存储层
 	store := store.NewStore(db)
 
@@ -60,7 +62,7 @@ func main() {
 	services := service.NewServices(store, config.JWT.Secret, config.JWT.ExpireHours)
 
 	// 初始化路由
-	r := setupRouter(services)
+	r := router.SetupRouter(services)
 
 	// 启动服务器
 	port := config.Server.Port
@@ -124,122 +126,4 @@ func initDB(config *Config) (*gorm.DB, error) {
 	}
 
 	return db, nil
-}
-
-// 设置路由
-func setupRouter(services *service.Services) *gin.Engine {
-	r := gin.Default()
-	// 允许跨域
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-	}))
-	// distFS, err := fs.Sub(vueDist, "web")
-	// if err != nil {
-	// 	log.Fatalf("无法创建子文件系统: %v", err)
-	// }
-
-	// 将静态文件服务挂载到根路径，确保Vue应用资源能正确加载
-	// 注意：静态文件服务应该在API路由之后注册
-	// 但由于前端资源引用路径的问题，我们需要先处理一些特殊路径
-
-	// // 处理favicon.ico
-	// r.GET("/favicon.ico", func(c *gin.Context) {
-	// 	favicon, readErr := fs.ReadFile(distFS, "favicon.ico")
-	// 	if readErr != nil {
-	// 		c.Status(http.StatusNotFound)
-	// 		return
-	// 	}
-	// 	c.Data(http.StatusOK, "image/x-icon", favicon)
-	// })
-
-	// // 处理assets目录
-	// assetsFS, err := fs.Sub(distFS, "assets")
-	// if err == nil {
-	// 	r.StaticFS("/assets", http.FS(assetsFS))
-	// }
-
-	// // 前端入口页面 - 根路径返回index.html
-	// r.GET("/", func(c *gin.Context) {
-	// 	indexHTML, err := fs.ReadFile(distFS, "index.html")
-	// 	if err != nil {
-	// 		c.String(http.StatusInternalServerError, "无法读取前端页面: %v", err)
-	// 		return
-	// 	}
-	// 	c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
-	// })
-
-	// // 所有未匹配的路由返回index.html，以支持前端SPA路由（history模式）
-	// r.NoRoute(func(c *gin.Context) {
-	// 	// 不处理API路径，避免影响API响应
-	// 	if strings.HasPrefix(c.Request.RequestURI, "/api/") {
-	// 		c.Status(http.StatusNotFound)
-	// 		return
-	// 	}
-	// 	indexHTML, err := fs.ReadFile(distFS, "index.html")
-	// 	if err != nil {
-	// 		c.String(http.StatusInternalServerError, "无法读取前端页面: %v", err)
-	// 		return
-	// 	}
-	// 	c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
-	// })
-
-	r.LoadHTMLFiles("web/dist/index.html")
-	r.Static("/assets", "./web/dist/assets")
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", nil)
-	})
-
-	// API路由组
-	apiGroup := r.Group("/api")
-
-	// 管理员接口
-	adminGroup := apiGroup.Group("/admin")
-	{
-		adminHandler := api.NewAdminHandler(services.AdminService)
-		adminGroup.POST("/login", adminHandler.Login)
-		// 修改密码需要认证
-		adminGroup.PUT("/password", api.AuthMiddleware(services.AdminService), adminHandler.ChangePassword)
-	}
-
-	// 软件管理接口
-	softwareGroup := apiGroup.Group("/software")
-	softwareHandler := api.NewSoftwareHandler(services.SoftwareService)
-	{
-		softwareGroup.Use(api.AuthMiddleware(services.AdminService))
-		softwareGroup.POST("", softwareHandler.CreateSoftware)
-		softwareGroup.GET("", softwareHandler.GetSoftwareList)
-		softwareGroup.PUT("/:akey", softwareHandler.UpdateSoftware)
-		softwareGroup.DELETE("/:akey", softwareHandler.DeleteSoftware)
-
-		// 版本管理接口
-		versionGroup := softwareGroup.Group("/:akey/versions")
-		versionHandler := api.NewVersionHandler(services.VersionService)
-		{
-			versionGroup.POST("", versionHandler.CreateVersion)
-			versionGroup.GET("", versionHandler.GetVersionList)
-		}
-	}
-
-	// 版本详情接口
-	versionDetailGroup := apiGroup.Group("/versions")
-	versionDetailHandler := api.NewVersionHandler(services.VersionService)
-	{
-		versionDetailGroup.Use(api.AuthMiddleware(services.AdminService))
-		versionDetailGroup.PUT("/:vkey", versionDetailHandler.UpdateVersion)
-		versionDetailGroup.DELETE("/:vkey", versionDetailHandler.DeleteVersion)
-	}
-
-	// 校验接口
-	checkGroup := apiGroup.Group("/check")
-	checkHandler := api.NewCheckHandler(services.CheckService)
-	{
-		checkGroup.POST("/legality", checkHandler.CheckLegality)
-		checkGroup.POST("/update", checkHandler.CheckUpdate)
-	}
-
-	return r
 }
