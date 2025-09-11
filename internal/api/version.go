@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"verkeyoss/internal/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 // VersionHandler 版本API处理器
@@ -26,9 +27,10 @@ func (h *VersionHandler) CreateVersion(c *gin.Context) {
 
 	// 绑定请求体
 	var versionRequest struct {
-		Version     string `json:"version" binding:"required"`
-		Description string `json:"description"`
-		IsLatest    bool   `json:"is_latest"`
+		Version        string `json:"version" binding:"required"`
+		Description    string `json:"description"`
+		IsLatest       bool   `json:"is_latest"`
+		IsForcedUpdate bool   `json:"is_forced_update"`
 	}
 
 	if err := c.ShouldBindJSON(&versionRequest); err != nil {
@@ -37,7 +39,7 @@ func (h *VersionHandler) CreateVersion(c *gin.Context) {
 	}
 
 	// 调用服务层创建版本
-	version, err := h.service.CreateVersion(akey, versionRequest.Version, versionRequest.Description, versionRequest.IsLatest)
+	version, err := h.service.CreateVersion(akey, versionRequest.Version, versionRequest.Description, versionRequest.IsLatest, versionRequest.IsForcedUpdate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse(500, "创建版本失败"))
 		return
@@ -45,12 +47,13 @@ func (h *VersionHandler) CreateVersion(c *gin.Context) {
 
 	// 返回成功响应
 	c.JSON(http.StatusOK, SuccessResponse(map[string]interface{}{
-		"vkey":        version.VKey,
-		"akey":        version.AKey,
-		"version":     version.Version,
-		"description": version.Description,
-		"is_latest":   version.IsLatest,
-		"created_at":  version.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		"vkey":             version.VKey,
+		"akey":             version.AKey,
+		"version":          version.Version,
+		"description":      version.Description,
+		"is_latest":        version.IsLatest,
+		"is_forced_update": version.IsForcedUpdate,
+		"created_at":       version.CreatedAt.Format("2006-01-02T15:04:05Z"),
 	}))
 }
 
@@ -74,11 +77,12 @@ func (h *VersionHandler) GetVersionList(c *gin.Context) {
 	var resultList []map[string]interface{}
 	for _, version := range versions {
 		resultList = append(resultList, map[string]interface{}{
-			"vkey":        version.VKey,
-			"version":     version.Version,
-			"description": version.Description,
-			"is_latest":   version.IsLatest,
-			"created_at":  version.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			"vkey":             version.VKey,
+			"version":          version.Version,
+			"description":      version.Description,
+			"is_latest":        version.IsLatest,
+			"is_forced_update": version.IsForcedUpdate,
+			"created_at":       version.CreatedAt.Format("2006-01-02T15:04:05Z"),
 		})
 	}
 
@@ -89,8 +93,6 @@ func (h *VersionHandler) GetVersionList(c *gin.Context) {
 	}))
 }
 
-
-
 // UpdateVersion 更新版本信息接口
 func (h *VersionHandler) UpdateVersion(c *gin.Context) {
 	// 获取VKey
@@ -98,9 +100,10 @@ func (h *VersionHandler) UpdateVersion(c *gin.Context) {
 
 	// 绑定请求体
 	var updateRequest struct {
-		Version     string `json:"version"`
-		Description string `json:"description"`
-		IsLatest    bool   `json:"is_latest"`
+		Version        string `json:"version"`
+		Description    string `json:"description"`
+		IsLatest       bool   `json:"is_latest"`
+		IsForcedUpdate bool   `json:"is_forced_update"`
 	}
 
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
@@ -109,7 +112,7 @@ func (h *VersionHandler) UpdateVersion(c *gin.Context) {
 	}
 
 	// 调用服务层更新版本
-	err := h.service.UpdateVersion(vkey, updateRequest.Version, updateRequest.Description, updateRequest.IsLatest)
+	err := h.service.UpdateVersion(vkey, updateRequest.Version, updateRequest.Description, updateRequest.IsLatest, updateRequest.IsForcedUpdate)
 	if err != nil {
 		if err.Error() == "版本不存在" {
 			c.JSON(http.StatusNotFound, ErrorResponse(404, "VKey不存在"))
@@ -121,7 +124,7 @@ func (h *VersionHandler) UpdateVersion(c *gin.Context) {
 
 	// 返回成功响应
 	c.JSON(http.StatusOK, gin.H{
-		"code": 200,
+		"code":    200,
 		"message": "更新成功",
 	})
 }
@@ -144,7 +147,7 @@ func (h *VersionHandler) DeleteVersion(c *gin.Context) {
 
 	// 返回成功响应
 	c.JSON(http.StatusOK, gin.H{
-		"code": 200,
+		"code":    200,
 		"message": "删除成功",
 	})
 }

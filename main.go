@@ -7,13 +7,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"verkeyoss/internal/config"
 	"verkeyoss/internal/initializer"
 	"verkeyoss/internal/router"
 	"verkeyoss/internal/service"
-
 	"verkeyoss/internal/store"
 
-	"gopkg.in/yaml.v3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -21,33 +21,15 @@ import (
 // //go:embed web
 // var vueDist embed.FS
 
-// 配置结构体
-type Config struct {
-	DB struct {
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		User     string `yaml:"user"`
-		Password string `yaml:"password"`
-		Name     string `yaml:"name"`
-	} `yaml:"db"`
-	Server struct {
-		Port int `yaml:"port"`
-	} `yaml:"server"`
-	JWT struct {
-		Secret      string `yaml:"secret"`
-		ExpireHours int    `yaml:"expire_hours"`
-	} `yaml:"jwt"`
-}
-
 func main() {
 	// 加载配置文件
-	config, err := loadConfig("config.yaml")
+	appConfig, err := config.LoadConfig("config.yaml")
 	if err != nil {
 		log.Fatalf("加载配置文件失败: %v", err)
 	}
 
 	// 数据库连接
-	db, err := initDB(config)
+	db, err := initDB(appConfig)
 	if err != nil {
 		log.Fatalf("数据库连接失败: %v", err)
 	}
@@ -59,13 +41,13 @@ func main() {
 	store := store.NewStore(db)
 
 	// 初始化服务层
-	services := service.NewServices(store, config.JWT.Secret, config.JWT.ExpireHours)
+	services := service.NewServices(store, appConfig.JWT.Secret, appConfig.JWT.ExpireHours)
 
 	// 初始化路由
 	r := router.SetupRouter(services)
 
 	// 启动服务器
-	port := config.Server.Port
+	port := appConfig.Server.Port
 	if port == 0 {
 		port = 8080 // 默认端口
 	}
@@ -92,33 +74,16 @@ func main() {
 	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	// defer cancel()
 	// if err := server.Shutdown(ctx); err != nil {
-	// 	log.Fatalf("服务器强制关闭: %v", err)
+	//	log.Fatalf("服务器强制关闭: %v", err)
 	// }
 
 	log.Println("服务器已关闭")
 }
 
-// 加载配置文件
-func loadConfig(configPath string) (*Config, error) {
-	file, err := os.Open(configPath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var config Config
-	d := yaml.NewDecoder(file)
-	if err := d.Decode(&config); err != nil {
-		return nil, err
-	}
-
-	return &config, nil
-}
-
 // 初始化数据库连接
-func initDB(config *Config) (*gorm.DB, error) {
+func initDB(appConfig *config.Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		config.DB.User, config.DB.Password, config.DB.Host, config.DB.Port, config.DB.Name)
+		appConfig.DB.User, appConfig.DB.Password, appConfig.DB.Host, appConfig.DB.Port, appConfig.DB.Name)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {

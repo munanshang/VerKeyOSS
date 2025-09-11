@@ -14,8 +14,8 @@ type BaseHandler struct {
 	// 基础字段和方法
 }
 
-// AuthMiddleware 用户认证中间件
-func AuthMiddleware(userService *service.UserService) gin.HandlerFunc {
+// AuthMiddleware 管理员认证中间件
+func AuthMiddleware(authService *service.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 从请求头中获取令牌
 		token := c.GetHeader("Authorization")
@@ -33,9 +33,9 @@ func AuthMiddleware(userService *service.UserService) gin.HandlerFunc {
 			token = token[7:]
 		}
 
-		// 验证令牌并获取用户信息
-		userId, isAdmin, err := userService.VerifyToken(token)
-		if err != nil {
+		// 验证令牌
+		valid, err := authService.VerifyToken(token)
+		if err != nil || !valid {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"code":    401,
 				"message": "令牌无效或已过期",
@@ -44,58 +44,15 @@ func AuthMiddleware(userService *service.UserService) gin.HandlerFunc {
 			return
 		}
 
-		// 将用户ID和管理员标识存储到上下文中
-		c.Set("user_id", userId)
-		c.Set("is_admin", isAdmin)
+		// 继续处理请求
 		c.Next()
 	}
 }
 
-// AdminMiddleware 管理员权限验证中间件
-func AdminMiddleware(userService *service.UserService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// 先进行用户认证
-		token := c.GetHeader("Authorization")
-		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    401,
-				"message": "未授权访问",
-			})
-			c.Abort()
-			return
-		}
-
-		// 简单处理Bearer令牌格式
-		if len(token) > 7 && token[:7] == "Bearer " {
-			token = token[7:]
-		}
-
-		// 验证令牌并获取用户信息
-		userId, isAdmin, err := userService.VerifyToken(token)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    401,
-				"message": "令牌无效或已过期",
-			})
-			c.Abort()
-			return
-		}
-
-		// 检查是否为管理员
-		if !isAdmin {
-			c.JSON(http.StatusForbidden, gin.H{
-				"code":    403,
-				"message": "无管理员权限",
-			})
-			c.Abort()
-			return
-		}
-
-		// 将用户ID和管理员标识存储到上下文中
-		c.Set("user_id", userId)
-		c.Set("is_admin", isAdmin)
-		c.Next()
-	}
+// AdminMiddleware 管理员权限验证中间件 (在单管理员系统中，等同于AuthMiddleware)
+func AdminMiddleware(authService *service.AuthService) gin.HandlerFunc {
+	// 直接使用AuthMiddleware，因为系统只有一个管理员
+	return AuthMiddleware(authService)
 }
 
 // ErrorResponse 错误响应

@@ -1,8 +1,9 @@
 package store
 
 import (
-	"github.com/google/uuid"
 	"verkeyoss/internal/model"
+
+	"github.com/google/uuid"
 )
 
 // VersionStoreImpl 版本存储实现
@@ -30,8 +31,8 @@ func (s *VersionStoreImpl) CreateVersion(version *model.Version) error {
 	// 如果标记为最新版本，先将其他版本设为非最新
 	if version.IsLatest {
 		if err := tx.Model(&model.Version{}).Where("a_key = ?", version.AKey).Update("is_latest", false).Error; err != nil {
-		tx.Rollback()
-		return err
+			tx.Rollback()
+			return err
 		}
 	} else {
 		// 检查是否应该自动设置为最新版本（如果是该软件的第一个版本）
@@ -94,8 +95,8 @@ func (s *VersionStoreImpl) UpdateVersion(version *model.Version) error {
 	// 如果要标记为最新版本，先将其他版本设为非最新
 	if version.IsLatest {
 		if err := tx.Model(&model.Version{}).Where("a_key = ? AND v_key != ?", version.AKey, version.VKey).Update("is_latest", false).Error; err != nil {
-		tx.Rollback()
-		return err
+			tx.Rollback()
+			return err
 		}
 	}
 
@@ -136,8 +137,8 @@ func (s *VersionStoreImpl) DeleteVersion(vkey string) error {
 		if err := tx.Where("a_key = ?", version.AKey).Order("created_at DESC").First(&latestVersion).Error; err == nil {
 			latestVersion.IsLatest = true
 			if err := tx.Save(&latestVersion).Error; err != nil {
-			tx.Rollback()
-			return err
+				tx.Rollback()
+				return err
 			}
 		}
 	}
@@ -157,8 +158,8 @@ func (s *VersionStoreImpl) GetLatestVersionByAKey(akey string) (*model.Version, 
 	return &version, nil
 }
 
-// CheckLegality 校验AKey和VKey的合法性
-func (s *VersionStoreImpl) CheckLegality(akey, vkey string) (bool, error) {
+// Validate 校验AKey和VKey的合法性
+func (s *VersionStoreImpl) Validate(akey, vkey string) (bool, error) {
 	var count int64
 	err := s.DB.Model(&model.Version{}).Where("a_key = ? AND v_key = ?", akey, vkey).Count(&count).Error
 	if err != nil {

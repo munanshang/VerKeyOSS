@@ -26,23 +26,11 @@ func NewDashboardHandler(dashboardService *service.DashboardService, announcemen
 }
 
 // GetDashboardData 获取仪表盘数据
-// 路由: GET /api/dashboard
+// 路由: GET /api/dashboard/stats
 // 需要认证
 func (h *DashboardHandler) GetDashboardData(c *gin.Context) {
-	// 从上下文中获取用户ID和管理员标识
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"code": 401, "message": "未授权访问"})
-		return
-	}
-
-	isAdmin, exists := c.Get("is_admin")
-	if !exists {
-		isAdmin = false
-	}
-
 	// 调用服务层获取仪表盘数据
-	dashboardData, err := h.dashboardService.GetDashboardData(userID.(uint), isAdmin.(bool))
+	dashboardData, err := h.dashboardService.GetDashboardData()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "message": "获取仪表盘数据失败", "error": err.Error()})
 		return

@@ -23,12 +23,13 @@ func NewVersionService(store store.VersionStore) *VersionService {
 }
 
 // CreateVersion 创建新版本
-func (s *VersionService) CreateVersion(akey, version, description string, isLatest bool) (*model.Version, error) {
+func (s *VersionService) CreateVersion(akey, version, description string, isLatest bool, isForcedUpdate bool) (*model.Version, error) {
 	newVersion := &model.Version{
-		AKey:        akey,
-		Version:     version,
-		Description: description,
-		IsLatest:    isLatest,
+		AKey:           akey,
+		Version:        version,
+		Description:    description,
+		IsLatest:       isLatest,
+		IsForcedUpdate: isForcedUpdate,
 	}
 
 	err := s.store.CreateVersion(newVersion)
@@ -63,7 +64,7 @@ func (s *VersionService) GetVersionInfo(vkey string) (*model.Version, error) {
 }
 
 // UpdateVersion 更新版本信息
-func (s *VersionService) UpdateVersion(vkey, version, description string, isLatest bool) error {
+func (s *VersionService) UpdateVersion(vkey, version, description string, isLatest bool, isForcedUpdate bool) error {
 	// 获取版本信息
 	versionInfo, err := s.store.GetVersionByVKey(vkey)
 	if err != nil {
@@ -79,6 +80,8 @@ func (s *VersionService) UpdateVersion(vkey, version, description string, isLate
 	}
 	// 只有明确设置了isLatest才更新
 	versionInfo.IsLatest = isLatest
+	// 更新强制更新字段
+	versionInfo.IsForcedUpdate = isForcedUpdate
 
 	return s.store.UpdateVersion(versionInfo)
 }

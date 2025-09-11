@@ -98,42 +98,6 @@ func (s *AppStoreImpl) UpdateApp(app *model.App) error {
 	return s.DB.Model(&model.App{}).Where("a_key = ?", app.AKey).Updates(app).Error
 }
 
-// GetAllApps 获取所有应用列表（管理员功能）
-func (s *AppStoreImpl) GetAllApps(page, size int) ([]*model.App, int64, error) {
-	var apps []*model.App
-	var total int64
-
-	// 计算偏移量
-	offset := (page - 1) * size
-
-	// 查询总数
-	s.DB.Model(&model.App{}).Count(&total)
-
-	// 查询列表
-	err := s.DB.Limit(size).Offset(offset).Find(&apps).Error
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// 为每个应用获取版本数量
-	for i := range apps {
-		var versionCount int64
-		s.DB.Model(&model.Version{}).Where("a_key = ?", apps[i].AKey).Count(&versionCount)
-		apps[i].VersionCount = versionCount
-	}
-
-	return apps, total, nil
-}
-
-// BanApp 封禁/解封应用
-func (s *AppStoreImpl) BanApp(akey string, banned bool, banReason string) error {
-	// 更新应用的封禁状态和封禁原因
-	return s.DB.Model(&model.App{}).Where("a_key = ?", akey).Updates(map[string]interface{}{
-		"is_banned":   banned,
-		"ban_reason":  banReason,
-	}).Error
-}
-
 // DeleteApp 删除应用（同时删除关联的版本）
 func (s *AppStoreImpl) DeleteApp(akey string) error {
 	// 开始事务
