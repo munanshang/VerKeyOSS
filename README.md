@@ -53,7 +53,52 @@
    cd verkeyoss
    ```
 
-2. 配置数据库
+2. 构建前端和后端（集成版本）
+   
+   项目支持将前端嵌入到后端可执行文件中，生成单一的部署文件。提供了自动化构建脚本，支持版本化打包：
+   
+   **使用自动化构建脚本（推荐）：**
+   
+   构建脚本会提示输入版本号，并生成版本化的输出目录，同时构建Windows和Linux版本：
+   
+   ```bash
+   # Windows系统
+   .\build.bat
+   
+   # Linux/macOS系统
+   chmod +x build.sh
+   ./build.sh
+   ```
+   
+   构建完成后，文件保存在 `bin/版本号/` 目录下：
+   ```
+   bin/
+   └── 1.0.0/
+       ├── verkeyoss-windows-amd64.exe
+       └── verkeyoss-linux-amd64
+   ```
+   
+   **手动构建：**
+   
+   **Windows系统：**
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   cd ..
+   go build -ldflags="-s -w" -o verkeyoss.exe .
+   ```
+   
+   **Linux/macOS系统：**
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   cd ..
+   go build -ldflags="-s -w" -o verkeyoss .
+   ```
+
+3. 配置数据库
    - 新建 MySQL 数据库（如 `verkeyoss`）
    - 复制配置文件模板并修改数据库信息
      ```bash
@@ -61,23 +106,42 @@
      ```
    - 配置文件内容示例：
      ```yaml
+     # 数据库配置
      db:
-       host: "localhost"
+       host: localhost
        port: 3306
-       user: "verkeyoss"
-       password: "verkeyoss"
-       name: "verkeyoss"
+       user: verkeyoss
+       password: verkeyoss
+       name: verkeyoss
+
+     # 服务器配置
      server:
-       port: 8080  # API 服务端口
+       port: 8913  # API 服务端口
+       debug: false  # 设置为true启用调试模式（允许所有域名访问，仅用于开发环境）
+
+     # JWT配置
+     jwt:
+       secret: 32字符的随机密钥
+       expire_hours: 24
+
+     # 管理员配置（首次运行时系统会自动生成）
+     admin:
+       username: verkeyoss
+       password: # 系统自动生成加密后的密码
      ```
 
 3. 启动服务（数据库初始化会自动执行）
    ```bash
-   go run main.go
-   # 或编译为二进制文件
-   go build -o verkeyoss main.go
+   # 直接运行可执行文件（内置前端）
    ./verkeyoss
+   # 或 Windows下
+   .\verkeyoss.exe
+   
+   # 或直接从源码运行
+   go run main.go
    ```
+
+**注意：** 集成版本将前端管理界面嵌入到Go应用中，单一可执行文件即包含了完整的前后端功能。访问 `http://localhost:8913` 即可使用Web管理界面。
 
 ## 完整 API 文档
 
@@ -93,11 +157,19 @@ VerKeyOSS/
 │   ├── router/        # 路由配置
 │   ├── service/       # 业务逻辑层
 │   └── store/         # 数据库操作层（与数据库交互）
+├── frontend/          # 前端项目（Vue3 + TypeScript + Element Plus）
+│   ├── src/           # 前端源代码
+│   ├── dist/          # 前端构建产物（会嵌入到Go应用中）
+│   ├── package.json   # 前端项目配置
+│   └── vite.config.ts # Vite构建配置
 ├── docs/
 │   ├── DEPLOY.md      # 部署文档
 │   ├── api.md         # 完整API文档
 │   └── images/
 │       └── Logo.svg   # 项目Logo
+├── BUILD.md           # 构建脚本使用说明
+├── build.sh           # Linux/macOS构建脚本
+├── build.bat          # Windows构建脚本
 ├── config.example.yaml # 配置模板（需复制为config.yaml使用）
 ├── LICENSE            # AGPLv3 协议文本
 ├── README.md          # 项目说明文档

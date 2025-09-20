@@ -21,7 +21,8 @@ type Config struct {
 		Name     string `yaml:"name"`
 	} `yaml:"db"`
 	Server struct {
-		Port int `yaml:"port"`
+		Port  int  `yaml:"port"`
+		Debug bool `yaml:"debug"` // 是否为调试模式
 	} `yaml:"server"`
 	JWT struct {
 		Secret      string `yaml:"secret"`
@@ -37,17 +38,21 @@ type Config struct {
 var appConfig *Config
 
 // LoadConfig 加载配置文件并初始化全局配置
+// 当配置文件中缺少某些字段时，会自动使用默认值
 func LoadConfig(configPath string) (*Config, error) {
+	// 创建默认配置
+	defaultConfig := createDefaultConfig()
+
 	// 检查配置文件是否存在
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		// 配置文件不存在，创建默认配置
+		// 配置文件不存在，使用默认配置并创建配置文件
 		log.Println("配置文件不存在，正在创建默认配置...")
-		defaultConfig := createDefaultConfig()
 		if err := saveConfig(defaultConfig, configPath); err != nil {
 			return nil, err
 		}
 		appConfig = defaultConfig
 	} else {
+		// 配置文件存在，读取配置
 		file, err := os.Open(configPath)
 		if err != nil {
 			return nil, err
@@ -60,6 +65,9 @@ func LoadConfig(configPath string) (*Config, error) {
 			return nil, err
 		}
 
+		// 合并配置，对缺失的字段使用默认值
+		mergeConfigWithDefaults(&config, defaultConfig)
+
 		appConfig = &config
 	}
 
@@ -67,6 +75,49 @@ func LoadConfig(configPath string) (*Config, error) {
 	SetAdminConfigFromAppConfig(appConfig.Admin.Username, appConfig.Admin.Password)
 
 	return appConfig, nil
+}
+
+// mergeConfigWithDefaults 合并配置文件中的配置和默认配置
+// 对于配置文件中缺失的字段，使用默认配置中的对应值
+func mergeConfigWithDefaults(config *Config, defaults *Config) {
+	// 合并数据库配置
+	if config.DB.Host == "" {
+		config.DB.Host = defaults.DB.Host
+	}
+	if config.DB.Port == 0 {
+		config.DB.Port = defaults.DB.Port
+	}
+	if config.DB.User == "" {
+		config.DB.User = defaults.DB.User
+	}
+	if config.DB.Password == "" {
+		config.DB.Password = defaults.DB.Password
+	}
+	if config.DB.Name == "" {
+		config.DB.Name = defaults.DB.Name
+	}
+
+	// 合并服务器配置
+	if config.Server.Port == 0 {
+		config.Server.Port = defaults.Server.Port
+	}
+	// 注意：布尔值不需要特殊处理，因为它们在配置文件中缺失时会被正确解析为false
+
+	// 合并JWT配置
+	if config.JWT.Secret == "" {
+		config.JWT.Secret = defaults.JWT.Secret
+	}
+	if config.JWT.ExpireHours == 0 {
+		config.JWT.ExpireHours = defaults.JWT.ExpireHours
+	}
+
+	// 合并管理员配置
+	if config.Admin.Username == "" {
+		config.Admin.Username = defaults.Admin.Username
+	}
+	if config.Admin.Password == "" || config.Admin.Password == "verkeyoss" {
+		config.Admin.Password = defaults.Admin.Password
+	}
 }
 
 // GetAppConfig 获取应用配置
@@ -94,7 +145,8 @@ func createDefaultConfig() *Config {
 	config.DB.User = "verkeyoss"
 	config.DB.Password = "verkeyoss"
 	config.DB.Name = "verkeyoss"
-	config.Server.Port = 8080
+	config.Server.Port = 8913
+	config.Server.Debug = false // 默认非调试模式
 	config.JWT.Secret = jwtSecret
 	config.JWT.ExpireHours = 24
 	config.Admin.Username = defaultUsername
@@ -116,7 +168,7 @@ func saveConfig(config *Config, filePath string) error {
 
 	log.Printf("默认配置已创建，请在首次登录后修改默认密码")
 	log.Printf("用户名: %s", config.Admin.Username)
-	log.Printf("密码: verkeyoss")
+	log.Printf("请使用默认密码登录后立即修改密码")
 
 	return nil
 }

@@ -37,3 +37,40 @@ func (s *DashboardStoreImpl) GetTotalVersions() (int64, error) {
 	}
 	return total, nil
 }
+
+// GetRecentApps 获取最近创建的应用（最多5个）
+func (s *DashboardStoreImpl) GetRecentApps(limit int) ([]*model.App, error) {
+	var apps []*model.App
+	err := s.DB.Model(&model.App{}).
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&apps).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 为每个应用计算版本数量
+	for _, app := range apps {
+		var versionCount int64
+		err := s.DB.Model(&model.Version{}).Where("a_key = ?", app.AKey).Count(&versionCount).Error
+		if err != nil {
+			return nil, err
+		}
+		app.VersionCount = versionCount
+	}
+
+	return apps, nil
+}
+
+// GetRecentVersions 获取最近创建的版本（最多5个）
+func (s *DashboardStoreImpl) GetRecentVersions(limit int) ([]*model.Version, error) {
+	var versions []*model.Version
+	err := s.DB.Model(&model.Version{}).
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&versions).Error
+	if err != nil {
+		return nil, err
+	}
+	return versions, nil
+}

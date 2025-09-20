@@ -44,6 +44,10 @@ type DashboardStore interface {
 	GetTotalApps() (int64, error)
 	// 获取总版本数
 	GetTotalVersions() (int64, error)
+	// 获取最近应用
+	GetRecentApps(limit int) ([]*model.App, error)
+	// 获取最近版本
+	GetRecentVersions(limit int) ([]*model.Version, error)
 }
 
 // AnnouncementStore 公告存储接口

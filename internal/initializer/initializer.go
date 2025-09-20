@@ -9,10 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// Initialize 执行数据库初始化，包括表创建和初始数据插入
+// Initialize 执行程序初始化，包括表创建和初始数据插入
 // 如果初始化过程中发生错误，程序将退出
 func Initialize(db *gorm.DB) {
-	log.Println("开始执行数据库初始化...")
+	log.Println("开始执行程序初始化...")
 
 	// 暂时禁用外键约束，以避免表创建顺序导致的问题
 	db.Exec("SET FOREIGN_KEY_CHECKS = 0;")
@@ -30,7 +30,7 @@ func Initialize(db *gorm.DB) {
 	// 初始化测试公告
 	initTestAnnouncement(db)
 
-	log.Println("数据库初始化完成！")
+	log.Println("程序初始化完成！")
 }
 
 // createTableIfNotExists 创建表并返回是否是新创建的表
@@ -61,13 +61,13 @@ func initDefaultSoftwareAndVersion(db *gorm.DB) {
 	err = db.Where("a_key = ?", "test").First(&app).Error
 
 	if err == nil {
-		// 已存在默认应用
-		log.Println("默认应用已存在，跳过初始化")
+		// 已存在默认应用，跳过初始化
 		return
 	}
 
 	// 创建默认应用
 	defaultApp := model.App{
+		UserID:      1, // 管理员ID固定为1
 		AKey:        "test",
 		Name:        "测试应用",
 		Description: "这是一个用于测试的默认应用",
@@ -85,8 +85,7 @@ func initDefaultSoftwareAndVersion(db *gorm.DB) {
 	err = db.Where("v_key = ?", "test").First(&version).Error
 
 	if err == nil {
-		// 已存在默认版本
-		log.Println("默认版本已存在，跳过初始化")
+		// 已存在默认版本，跳过初始化
 	} else {
 		// 创建默认版本
 		defaultVersion := model.Version{
@@ -112,7 +111,7 @@ func initTestAnnouncement(db *gorm.DB) {
 	var count int64
 	db.Model(&model.Announcement{}).Count(&count)
 	if count > 0 {
-		log.Println("公告已存在，跳过初始化")
+		// 公告已存在，跳过初始化
 		return
 	}
 

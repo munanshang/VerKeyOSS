@@ -1,0 +1,31 @@
+# VerKeyOSS 配置文件示例
+
+# 数据库配置
+db:
+  host: localhost
+  port: 3306
+  user: verkeyoss
+  password: verkeyoss
+  name: verkeyoss
+
+# 服务器配置
+server:
+  port: 8913
+  debug: false  # 设置为true启用调试模式（允许所有域名访问，仅用于开发环境）
+
+# JWT配置
+jwt:
+  secret: 32字符的随机密钥
+  expire_hours: 24
+
+# 管理员配置
+admin:
+  username: verkeyoss
+  password: $2a$10$PW2yE7Ldm2ufv5WylfwweOD1aM8/fkqINZQrTakAK7rCIIiWPHG9.
+
+# 注意：
+# 1. 实际使用时请修改为您自己的配置
+# 2. 取消注释需要的配置项
+# 3. 默认情况下，如果配置文件不存在，系统会自动创建一个包含默认值的配置文件
+# 4. 调试模式下会启用详细日志和API调试工具
+# 5. ⚠️  警告：调试模式下允许所有域名访问，正式环境中必须设置 debug: false

@@ -1,14 +1,15 @@
 package service
 
 import (
-	"errors"
+	"verkeyoss/internal/errors"
 	"verkeyoss/internal/model"
 	"verkeyoss/internal/store"
 )
 
+// 预定义错误，使用统一的错误处理
 var (
-	ErrAppNotFound = errors.New("应用不存在")
-	ErrAppExists   = errors.New("应用已存在")
+	ErrAppNotFound = errors.ErrAppNotFound
+	ErrAppExists   = errors.ErrAppExists
 )
 
 // AppService 应用服务

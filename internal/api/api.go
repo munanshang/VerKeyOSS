@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	"verkeyoss/internal/errors"
+	"verkeyoss/internal/logger"
 	"verkeyoss/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -68,5 +70,23 @@ func SuccessResponse(data interface{}) gin.H {
 	return gin.H{
 		"code": 200,
 		"data": data,
+	}
+}
+
+// respondSuccess 返回成功响应
+func respondSuccess(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusOK, SuccessResponse(data))
+}
+
+// respondError 返回错误响应
+func respondError(c *gin.Context, err error) {
+	if appErr, ok := errors.IsAppError(err); ok {
+		// 如果是应用错误，使用定义的错误码和消息
+		logger.Errorf("API错误: %v", appErr)
+		c.JSON(appErr.Code, ErrorResponse(appErr.Code, appErr.Message))
+	} else {
+		// 其他错误作为内部服务器错误处理
+		logger.Errorf("内部错误: %v", err)
+		c.JSON(http.StatusInternalServerError, ErrorResponse(500, "服务器内部错误"))
 	}
 }

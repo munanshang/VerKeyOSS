@@ -95,7 +95,10 @@ func (s *AppStoreImpl) GetAppListByUserID(userID uint, page, size int) ([]*model
 
 // UpdateApp 更新应用信息
 func (s *AppStoreImpl) UpdateApp(app *model.App) error {
-	return s.DB.Model(&model.App{}).Where("a_key = ?", app.AKey).Updates(app).Error
+	// 使用 Select 明确指定要更新的字段，包括零值字段
+	return s.DB.Model(&model.App{}).Where("a_key = ?", app.AKey).
+		Select("name", "description", "is_paid").
+		Updates(app).Error
 }
 
 // DeleteApp 删除应用（同时删除关联的版本）
