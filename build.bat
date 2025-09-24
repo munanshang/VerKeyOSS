@@ -1,77 +1,81 @@
 @echo off
-chcp 65001 >nul
-echo 构建VerKeyOSS应用...
+chcp 65001 >nul 2>&1
+setlocal
+
+echo Build VerKeyOSS Application...
 echo.
 
-REM 获取版本号
-set /p VERSION="请输入打包版本号 (例如: 1.0.0): "
+REM Get version number
+echo Please enter build version (e.g., 1.0.0):
+set /p VERSION=
+
 if "%VERSION%"=="" (
-    echo 版本号不能为空！
+    echo Version number cannot be empty!
     pause
     exit /b 1
 )
 
-echo 打包版本: %VERSION%
+echo Build version: %VERSION%
 echo.
 
-REM 创建输出目录
+REM Create output directory
 set OUTPUT_DIR=bin\%VERSION%
 if not exist "%OUTPUT_DIR%" (
     mkdir "%OUTPUT_DIR%"
 )
 
-REM 强制重新构建前端
-echo 清理前端构建文件...
+REM Force rebuild frontend
+echo Cleaning frontend build files...
 if exist "frontend\dist" (
     rmdir /s /q "frontend\dist"
 )
 
-echo 构建前端...
+echo Building frontend...
 cd frontend
 call npm run build
 if %errorlevel% neq 0 (
-    echo 前端构建失败！
+    echo Frontend build failed!
     cd ..
     pause
     exit /b 1
 )
 cd ..
-echo 前端构建完成
+echo Frontend build completed
 echo.
 
-REM 构建Windows版本
-echo 构建Windows版本...
+REM Build Windows version
+echo Building Windows version...
 set GOOS=windows
 set GOARCH=amd64
-go build -ldflags="-s -w -X main.version=%VERSION%" -o "%OUTPUT_DIR%\verkeyoss-windows-amd64.exe" .
+go build -ldflags="-s -w -X main.version=%VERSION%" -o "%OUTPUT_DIR%\verkeyoss-%VERSION%-windows-amd64.exe" .
 if %errorlevel% neq 0 (
-    echo Windows版本构建失败！
+    echo Windows build failed!
     pause
     exit /b 1
 )
 
-REM 构建Linux版本
-echo 构建Linux版本...
+REM Build Linux version
+echo Building Linux version...
 set GOOS=linux
 set GOARCH=amd64
-go build -ldflags="-s -w -X main.version=%VERSION%" -o "%OUTPUT_DIR%\verkeyoss-linux-amd64" .
+go build -ldflags="-s -w -X main.version=%VERSION%" -o "%OUTPUT_DIR%\verkeyoss-%VERSION%-linux-amd64" .
 if %errorlevel% neq 0 (
-    echo Linux版本构建失败！
+    echo Linux build failed!
     pause
     exit /b 1
 )
 
-REM 重置环境变量
+REM Reset environment variables
 set GOOS=
 set GOARCH=
 
 echo.
-echo 构建完成！
-echo 输出目录: %OUTPUT_DIR%
+echo Build completed!
+echo Output directory: %OUTPUT_DIR%
 echo.
-echo 生成的文件:
+echo Generated files:
 for %%f in ("%OUTPUT_DIR%\*") do (
-    echo   %%~nxf - %%~zf 字节
+    echo   %%~nxf - %%~zf bytes
 )
 echo.
 pause
