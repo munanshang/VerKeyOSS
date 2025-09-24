@@ -21,7 +21,7 @@ func NewServices(store *store.Store, jwtSecret string, expireHours int) *Service
 	authService := NewAuthService(jwtSecret, expireHours)
 	appService := NewAppService(store.NewAppStore())
 	versionService := NewVersionService(store.NewVersionStore())
-	checkService := NewCheckService(store.NewVersionStore())
+	checkService := NewCheckService(store.NewVersionStore(), store.NewAppStore())
 	dashboardService := NewDashboardService(store.NewDashboardStore())
 	announcementService := NewAnnouncementService(store.NewAnnouncementStore())
 

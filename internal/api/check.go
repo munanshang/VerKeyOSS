@@ -44,10 +44,18 @@ func (h *CheckHandler) Validate(c *gin.Context) {
 	}
 
 	// 返回响应
-	c.JSON(statusCode, SuccessResponse(map[string]interface{}{
+	responseData := map[string]interface{}{
 		"valid":   result.Valid,
 		"message": result.Message,
-	}))
+	}
+
+	// 如果校验成功，添加应用名和版本号
+	if result.Valid {
+		responseData["app_name"] = result.AppName
+		responseData["version"] = result.Version
+	}
+
+	c.JSON(statusCode, SuccessResponse(responseData))
 }
 
 // CheckUpdate 检查是否有新版本接口

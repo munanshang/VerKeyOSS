@@ -71,6 +71,8 @@ export interface CheckRequest {
 export interface ValidationResponse {
   valid: boolean
   message: string
+  app_name?: string
+  version?: string
 }
 
 export interface UpdateCheckResponse {

@@ -402,7 +402,9 @@ VerKeyOSS 支持两种部署模式：
     "code": 200,
     "data": {
       "valid": true,  // 布尔值，是否合法
-      "message": "AKey和VKey合法"  // 说明信息
+      "message": "AKey和VKey合法",  // 说明信息
+      "app_name": "应用名称",  // 校验成功时返回应用名称
+      "version": "版本号"  // 校验成功时返回版本号
     }
   }
   ```

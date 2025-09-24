@@ -9,11 +9,12 @@ import (
 
 type CheckService struct {
 	versionStore store.VersionStore
+	appStore     store.AppStore
 }
 
 // NewCheckService 创建校验服务实例
-func NewCheckService(versionStore store.VersionStore) *CheckService {
-	return &CheckService{versionStore: versionStore}
+func NewCheckService(versionStore store.VersionStore, appStore store.AppStore) *CheckService {
+	return &CheckService{versionStore: versionStore, appStore: appStore}
 }
 
 // Validate 校验AKey和VKey的合法性
@@ -28,9 +29,29 @@ func (s *CheckService) Validate(akey, vkey string) (*model.ValidationResponse, e
 	}
 
 	if legal {
+		// 查询版本信息以获取版本号
+		version, err := s.versionStore.GetVersionByVKey(vkey)
+		if err != nil {
+			return &model.ValidationResponse{
+				Valid:   true,
+				Message: "校验成功",
+			}, nil
+		}
+
+		// 查询应用信息以获取应用名
+		app, err := s.appStore.GetAppByAKey(akey)
+		if err != nil {
+			return &model.ValidationResponse{
+				Valid:   true,
+				Message: "校验成功",
+			}, nil
+		}
+
 		return &model.ValidationResponse{
 			Valid:   true,
 			Message: "校验成功",
+			AppName: app.Name,
+			Version: version.Version,
 		}, nil
 	}
 

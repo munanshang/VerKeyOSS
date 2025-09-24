@@ -76,4 +76,6 @@ type CheckRequest struct {
 type ValidationResponse struct {
 	Valid   bool   `json:"valid"`
 	Message string `json:"message"`
+	AppName string `json:"app_name,omitempty"`
+	Version string `json:"version,omitempty"`
 }

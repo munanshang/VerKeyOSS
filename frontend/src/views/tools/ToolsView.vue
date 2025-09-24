@@ -71,6 +71,17 @@
               <div class="result-message">
                 {{ validateResult.message }}
               </div>
+              <!-- 显示应用名和版本号 -->
+              <div v-if="validateResult.valid && validateResult.app_name" class="app-info">
+                <div class="info-item">
+                  <span class="info-label">应用名称：</span>
+                  <span class="info-value">{{ validateResult.app_name }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">版本号：</span>
+                  <span class="info-value">{{ validateResult.version }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </el-card>
@@ -427,15 +438,34 @@ const handleCheckUpdate = async () => {
 
 .update-label {
   font-weight: 500;
-  color: #303133;
 }
 
-.update-value {
-  font-family: monospace;
-  background: #e4e7ed;
-  padding: 2px 6px;
+.app-info {
+  margin-top: 12px;
+  padding: 12px;
+  background: #ffffff;
   border-radius: 4px;
+  border-left: 4px solid #409eff;
+}
+
+.info-item {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-weight: 500;
   color: #606266;
+  width: 80px;
+}
+
+.info-value {
+  color: #303133;
+  flex: 1;
 }
 
 .help-card {
